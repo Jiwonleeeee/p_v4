@@ -1,0 +1,138 @@
+---
+title: 'Applied Regression HW #1'
+author: "Jiwon Lee"
+date: "9/4/2021"
+output:
+  html_document: default
+  word_document: default
+---
+**Question 4**
+```{r}
+setwd("/Users/wonny/Downloads/Applied reg")
+rainfall <- read.csv(file='rainfall.csv',header=T)
+groundhog <- read.table(file='groundhog.table',sep=",",header=T)
+range(rainfall$WY);range(groundhog$year)
+```
+
+Separate years Phil sees his shadow and he doesn't
+
+```{r}
+YT <- groundhog[groundhog$shadow=="Y","year"] # Years Phil sees his shadow
+YF <- groundhog[groundhog$shadow=="N","year"] # Years Phil does not his shadow
+YT;YF
+```
+
+Calculate the average rainfalls
+```{r}
+av_YT <- rainfall[which(rainfall$WY%in%YT),"Total"]/12
+av_YF <- rainfall[which(rainfall$WY%in%YF),"Total"]/12
+
+```
+
+1. Make a boxplot of the average rainfall in Northen California comparing the years Phil sees his shadow versus the years he does not.
+```{r}
+boxplot(av_YT,av_YF,names=c("Phil sees his shadow","Phil does not see his shadow"),ylab="Average rainfall",col=c("grey","darkgrey"))
+```
+
+
+2. 90% confidence interval for the difference between the mean rainfall in years Phil sees his shadow and years he does not.
+
+Check whether the variances are equal or not
+```{r}
+var(av_YT);var(av_YF)
+var.test(av_YT,av_YF)
+```
+Since p-value=0.3952 is greater than 0.05, we cannot reject the H0, so there is not enough evidence supporting the unequal variances.
+
+```{r}
+t.test(av_YT,av_YF,conf.level = 0.90,var.equal = T)$conf.int
+```
+
+3. Interpret the interval in part 2.  
+The confidence interval will capture the true paramter, mean, with 0.95 probability.
+
+4. At level α = 0.05, would you reject the null hypothesis that the average rainfall in Northern California during the month of February was the same in years Phil sees his shadow versus years he does not?
+```{r}
+rain_YT_Feb <- rainfall[which(rainfall$WY%in%YT),"Feb"]
+rain_YF_Feb <- rainfall[which(rainfall$WY%in%YF),"Feb"]
+var.test(rain_YT_Feb,rain_YF_Feb)
+```
+
+
+```{r}
+t.test(rain_YT_Feb,rain_YF_Feb,var.equal = T)
+```
+
+Since the p-value 0.3986 is greater than 0.05, the null hypothesis cannot be rejected at α = 0.05. 
+
+5.  What assumptions are you making in forming your confidence interval and in your hypothesis test?  
+The two samples are drawn from normal distributions with equal variance but unknown, also they are independent. 
+
+**Question 5**
+```{r}
+Hertz <- c(37.16, 14.36, 17.59, 19.73, 30.77, 26.29, 30.03, 29.02, 22.63, 39.21)
+Thrifty <- c(29.49, 12.19, 15.07, 15.17, 24.52, 22.32, 25.30, 22.74, 19.35, 34.44)
+```
+
+1.  Explain why this is a paired-sample problem.  
+The two groups are not independent because the car types are the same.
+
+2. Use a graph to determine whether the assumption of normality is reasonable.
+```{r}
+diff <- Hertz-Thrifty
+s.diff <- sort(diff)
+qqnorm(s.diff);qqline(s.diff)
+```
+
+The data points seem to follow the straight line, so we can conclude that the normality assumption is reasonable.
+
+3. Using p-value, test at α = 0.05 whether Thrifty has a lower mean rental rate than Hertz via a t-test
+```{r}
+t.test(diff,alternative="less", mu=0)
+```
+$\mu=\mu_{H}-\mu_{T}$  
+H0:$\mu<0$ vs H1:$\mu \ge0$  
+Since p-value is nearly 1, we cannot reject the null hypothesis H0 and therefore we cannot conclude that Thrifty has a lower mean rental rate than Hertz.
+
+
+**Question 6**
+1. Create a boxplot of the supervisor rating Y, splitting the data based on the median of X4
+```{r}
+P060 <- read.table(file="P060.txt",head=T)
+med4 <- median(P060$X4)
+above_med <- subset(P060,X4>=med4)$Y # split the data based on the median of X4
+below_med <- subset(P060,X4<med4)$Y
+boxplot(above_med,below_med,names=c("above the median of X4","below the median of X4"),ylab="Y")
+```
+
+2. Compute the sample mean, sample standard deviation Y in the two groups  
+Let the group of Yi's whose values of X4 is above the median of X4 be the first group, and the other is the second group
+```{r}
+# mean and sd of Y in the first group
+mean(above_med);sd(above_med)
+# mean and sd of Y in the second group
+mean(below_med);sd(below_med)
+```
+
+3. Create a histogram of Y within each group  
+```{r}
+par(mfrow=c(1,2))
+hist(above_med,main="first group",xlab="Y");hist(below_med,main="second group",xlab="Y")
+```
+
+4. Compute a 90% confidence interval for the difference in supervisor performance between the two groups. What assumptions are you making?
+```{r}
+var.test(above_med,below_med)
+```
+
+
+```{r}
+t.test(above_med,below_med,conf.level = 0.90,var.equal = T)$conf.int
+```
+The two samples are drawn from normal distributions with equal variance but unknown, also they are independent. 
+
+5. At level α = 5%, test the null hypothesis that the average supervisor performance does not differ between the two groups. What assumptions are you making? What can you conclude?
+```{r}
+t.test(above_med,below_med,conf.level = 0.95,var.equal = T)
+```
+Assumptions are described in the answer to the previous question. Since p-value 0.006296 < 0.05, we can reject the null hypothesis that the true difference is equal to 0, which means there is strong evidence supporting the difference between the two average supervisor performances.
